@@ -41,7 +41,6 @@ public class Movement : MonoBehaviour
     public ParticleSystem wallJumpParticle;
     public ParticleSystem slideParticle;
 
-    // Start is called before the first frame update
     void Start()
     {
         coll = GetComponent<Collision>();
@@ -49,7 +48,6 @@ public class Movement : MonoBehaviour
         anim = GetComponentInChildren<AnimationScript>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         float x = Input.GetAxis("Horizontal");
@@ -61,6 +59,7 @@ public class Movement : MonoBehaviour
         Walk(dir);
         anim.SetHorizontalMovement(x, y, rb.velocity.y);
 
+        // Shift or MMB hold - Stay on wall
         if (coll.onWall && Input.GetButton("Fire3") && canMove)
         {
             if(side != coll.wallSide)
@@ -69,45 +68,53 @@ public class Movement : MonoBehaviour
             wallSlide = false;
         }
 
+        // Shift or MMB up (revert bool - fall)
         if (Input.GetButtonUp("Fire3") || !coll.onWall || !canMove)
         {
             wallGrab = false;
             wallSlide = false;
         }
 
+        // Enable jump logic if stay on ground // coll.onGround inside Collision.cs #1
         if (coll.onGround && !isDashing)
         {
-            wallJumped = false;
+            wallJumped = false; 
             GetComponent<BetterJumping>().enabled = true;
         }
         
+        // Maybe that's strange to use that with gravity of rigidbody, but ok.
+        // That is fix bug with Dashing (without this code character fast fall down without 
+        // ### TRELLO #5 ###
         if (wallGrab && !isDashing)
         {
             rb.gravityScale = 0;
-            if(x > .2f || x < -.2f)
+            if(x > .2f || x < -.2f) //x, y That is Input.GetAxis(...)
             rb.velocity = new Vector2(rb.velocity.x, 0);
-
+            
             float speedModifier = y > 0 ? .5f : 1;
 
             rb.velocity = new Vector2(rb.velocity.x, y * (speed * speedModifier));
         }
         else
         {
-            rb.gravityScale = 3;
+            rb.gravityScale = 3; // just whole gravitation... bruh...
         }
 
+        // Can understand hold we horizontal controls to not Slide wall everytime, without that we just pin to wall without falling
         if(coll.onWall && !coll.onGround)
         {
             if (x != 0 && !wallGrab)
             {
-                wallSlide = true;
+                wallSlide = true; /////////////////////////////////////////
                 WallSlide();
             }
         }
 
+        // Stay at the ground if slide and touch ground (can be deleted, or modified)
         if (!coll.onWall || coll.onGround)
             wallSlide = false;
 
+        // JUMP || WALL JUMP
         if (Input.GetButtonDown("Jump"))
         {
             anim.SetTrigger("jump");
@@ -118,28 +125,35 @@ public class Movement : MonoBehaviour
                 WallJump();
         }
 
+        // Just imput for dashing
         if (Input.GetButtonDown("Fire1") && !hasDashed)
         {
             if(xRaw != 0 || yRaw != 0)
                 Dash(xRaw, yRaw);
         }
 
+
+        // Wtf looks stupid, mb that fix bug with walking on wall --- ???
         if (coll.onGround && !groundTouch)
         {
             GroundTouch();
             groundTouch = true;
         }
 
+        // same ground check bool
         if(!coll.onGround && groundTouch)
         {
-            groundTouch = false;
+            groundTouch = false; // need to find where it's going to be used --- ???
         }
 
-        WallParticle(y);
+        WallParticle(y); // need to move that in different place maybe
 
+        // grab on wall permamentally
         if (wallGrab || wallSlide || !canMove)
             return;
 
+        
+        // Flip on ground, not only on touching walls
         if(x > 0)
         {
             side = 1;
@@ -159,7 +173,7 @@ public class Movement : MonoBehaviour
         hasDashed = false;
         isDashing = false;
 
-        side = anim.sr.flipX ? -1 : 1;
+        side = anim.sr.flipX ? -1 : 1; //wtf is that .sr?
 
         jumpParticle.Play();
     }
@@ -168,7 +182,6 @@ public class Movement : MonoBehaviour
     {
         Camera.main.transform.DOComplete();
         Camera.main.transform.DOShakePosition(.2f, .5f, 14, 90, false, true);
-        FindObjectOfType<RippleEffect>().Emit(Camera.main.WorldToViewportPoint(transform.position));
 
         hasDashed = true;
 
