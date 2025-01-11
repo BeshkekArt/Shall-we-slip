@@ -18,7 +18,11 @@ public class BetterJumping : MonoBehaviour
         if(rb.velocity.y < 0)
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
-        }else if(rb.velocity.y > 0 && !Input.GetButton("Jump"))
+            // lowJumpMultiplier = 1 -> does not change jump height.
+            // lowJumpMultiplier > 1 -> cuts the jump height more strongly.
+            // lowJumpMultiplier < 1 -> weakly “cuts” the jump height.
+        }
+        else if(rb.velocity.y > 0 && !Input.GetButton("Jump"))
         {
             rb.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
