@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +18,7 @@ public class Movement : MonoBehaviour
     public float slideSpeed = 5;
     public float wallJumpLerp = 10;
     public float dashSpeed = 20;
+    public float slopeSpeed = 5;
 
     [Space]
     [Header("Booleans")]
@@ -98,6 +99,11 @@ public class Movement : MonoBehaviour
         else
         {
             rb.gravityScale = 3; // just whole gravitation... bruh...
+        }
+
+        if (coll.onGround && coll.slopeAngle > 0)
+        {
+            rb.velocity = coll.slopeDirection * slopeSpeed;
         }
 
         // Can understand hold we horizontal controls to not Slide wall everytime, without that we just pin to wall without falling
