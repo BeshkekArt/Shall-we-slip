@@ -18,37 +18,34 @@ public class Collision : MonoBehaviour
     public float slopeAngle { get; private set;}
     public Vector2 slopeDirection { get; private set; }
 
-    private CapsuleCollider2D capsuleCollider2D;
+    public CapsuleCollider2D capsuleCollider2D;
     private Vector2 colliderSize;
-
+    private Vector2 colliderOffset;
 
     [Space]
 
     [Header("Collision")]
 
     public float collisionRadius = 0.25f;
-    public Vector2 bottomOffset, rightOffset, leftOffset;
+    public Vector2 rightOffset, leftOffset;
     private Color debugCollisionColor = Color.red;
 
-    void Start()
-    {
-        colliderSize = capsuleCollider2D.size;
-    }
-
-    void Update()
+    void Update()   
     {  
-        onGround = Physics2D.OverlapCircle((Vector2)transform.position + colliderSize, collisionRadius, groundLayer); //#1
-        onWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer) 
-            || Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
+        onGround = Physics2D.OverlapCircle(colliderOffset + new Vector2(0.0f, -colliderSize.y), collisionRadius, groundLayer); //#1
+        onWall = Physics2D.OverlapCircle(colliderOffset + new Vector2(colliderSize.x, 0.0f), collisionRadius, groundLayer) 
+            || Physics2D.OverlapCircle(colliderOffset + new Vector2(-colliderSize.x, 0.0f), collisionRadius, groundLayer);
 
-        onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer);
-        onLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
+        onRightWall = Physics2D.OverlapCircle(colliderOffset + new Vector2(colliderSize.x, 0.0f), collisionRadius, groundLayer);
+        onLeftWall = Physics2D.OverlapCircle(colliderOffset + new Vector2(-colliderSize.x, 0.0f), collisionRadius, groundLayer);
 
         wallSide = onRightWall ? -1 : 1;
     }
 
     void FixedUpdate()
     {
+        colliderSize = capsuleCollider2D.size / 2;  
+        colliderOffset = capsuleCollider2D.offset + (Vector2)transform.position;
         Slope();    
     }
 
@@ -65,10 +62,8 @@ public class Collision : MonoBehaviour
             if (slopeAngle > 0)
             {
                 slopeDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
-                Debug.Log(slopeDirection);
             } else
               slopeDirection = Vector2.zero;
-              Debug.Log(slopeDirection);
         } 
     }
 
@@ -76,11 +71,9 @@ public class Collision : MonoBehaviour
     {
         Gizmos.color = Color.red;
 
-        var positions = new Vector2[] { bottomOffset, rightOffset, leftOffset };
-
-        Gizmos.DrawWireSphere((Vector2)transform.position + colliderSize.y, collisionRadius);
-        Gizmos.DrawWireSphere((Vector2)transform.position + rightOffset, collisionRadius);
-        Gizmos.DrawWireSphere((Vector2)transform.position + leftOffset, collisionRadius);
+        Gizmos.DrawWireSphere(colliderOffset + new Vector2(0.0f, -colliderSize.y), collisionRadius);
+        Gizmos.DrawWireSphere(colliderOffset + new Vector2(colliderSize.x, 0.0f), collisionRadius);
+        Gizmos.DrawWireSphere(colliderOffset + new Vector2(-colliderSize.x, 0.0f), collisionRadius);
 
         Gizmos.color = Color.yellow; // Измените цвет на любой удобный
         Gizmos.DrawLine(transform.position, transform.position + Vector3.down * 2f); // Пример рейкаста вниз
