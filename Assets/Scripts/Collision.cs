@@ -10,17 +10,25 @@ public class Collision : MonoBehaviour
 
     [Space]
 
+    public Rigidbody2D rb;
+
     public bool onGround; //#1
     public bool onWall;
     public bool onRightWall;
     public bool onLeftWall;
+    private bool isOnSlope;
     public int wallSide;
+
+    private float slopeDownAngle;
+    private float slopeDownAngleOld;
     public float slopeAngle { get; private set;}
     public Vector2 slopeDirection { get; private set; }
+    private Vector2 newVelocity;
 
     public CapsuleCollider2D capsuleCollider2D;
     private Vector2 colliderSize;
     private Vector2 colliderOffset;
+    private Vector2 slopeNormalPerp;
 
     [Space]
 
@@ -46,25 +54,54 @@ public class Collision : MonoBehaviour
     {
         colliderSize = capsuleCollider2D.size / 2;  
         colliderOffset = capsuleCollider2D.offset + (Vector2)transform.position;
-        Slope();    
+        SlopeVertical();
     }
 
-    private void Slope()
+    public void ApplySlope(float xInput, float movementSpeed)
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 2f, groundLayer);
+        newVelocity.Set(movementSpeed * xInput, rb.velocity.y);
+        rb.velocity = newVelocity;
 
-        if (hit.collider != null)
+        if (onGround && !isOnSlope)
         {
-            Vector2 surfaceNormal = hit.normal;
+            newVelocity.Set(movementSpeed * xInput, 0.0f);
+            rb.velocity = newVelocity;
+        }
 
-            slopeAngle = Vector2.Angle(surfaceNormal, Vector2.up);
+        else if (onGround && isOnSlope)
+        {
+            newVelocity.Set(movementSpeed * slopeNormalPerp.x * -xInput, movementSpeed * slopeNormalPerp.y * -xInput);
+            rb.velocity = newVelocity;
 
-            if (slopeAngle > 0)
+        }
+
+        else if (!onGround)
+        {
+            newVelocity.Set(movementSpeed * xInput, rb.velocity.y);
+            rb.velocity = newVelocity;
+        }
+    }
+
+
+    private void SlopeVertical()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1f, groundLayer);
+
+        if (hit)
+        {
+            slopeNormalPerp = Vector2.Perpendicular(hit.normal).normalized;
+            slopeDownAngle = Vector2.Angle(hit.normal, Vector2.up);
+
+            if(slopeDownAngle != slopeDownAngleOld)
             {
-                slopeDirection = new Vector2(surfaceNormal.y, -surfaceNormal.x).normalized;
-            } else
-              slopeDirection = Vector2.zero;
-        } 
+                isOnSlope = true;
+            }
+
+            slopeDownAngleOld = slopeDownAngle;
+
+            Debug.DrawRay(hit.point, slopeNormalPerp, Color.red);
+            Debug.DrawRay(hit.point, hit.normal, Color.green);
+        }
     }
 
     void OnDrawGizmos()

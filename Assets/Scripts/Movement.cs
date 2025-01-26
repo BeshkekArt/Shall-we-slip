@@ -41,6 +41,8 @@ public class Movement : MonoBehaviour
     public ParticleSystem jumpParticle;
     public ParticleSystem wallJumpParticle;
     public ParticleSystem slideParticle;
+    private float x;
+    private float y;
 
     void Start()
     {
@@ -51,8 +53,8 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        float x = Input.GetAxis("Horizontal");
-        float y = Input.GetAxis("Vertical");
+        x = Input.GetAxis("Horizontal");
+        y = Input.GetAxis("Vertical");
         float xRaw = Input.GetAxisRaw("Horizontal");
         float yRaw = Input.GetAxisRaw("Vertical");
         Vector2 dir = new Vector2(x, y);
@@ -170,8 +172,7 @@ public class Movement : MonoBehaviour
             side = -1;
             anim.Flip(side);
         }
-
-
+        coll.ApplySlope(x, speed);
     }
 
     void GroundTouch()
